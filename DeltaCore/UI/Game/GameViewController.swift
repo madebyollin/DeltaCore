@@ -341,9 +341,23 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 controllerViewFrame = self.view.bounds
             }
             
-            availableGameFrame = self.view.bounds
+            // For translucent landscape skins that don't define explicit screen regions, the
+            // controller overlay floats over the game. Shrink the available game area vertically
+            // so the aspect-fitted game view doesn't extend into the control bands at the top
+            // and bottom of the screen. The 8% inset is tuned for SNES-style layouts where
+            // shoulder buttons and Select/Start occupy roughly the outer 10% of screen height.
+            if let traits = self.controllerView.controllerSkinTraits,
+               self.controllerView.controllerSkin?.isTranslucent(for: traits) == true,
+               (self.controllerView.controllerSkin?.screens(for: traits) ?? []).isEmpty
+            {
+                availableGameFrame = self.view.bounds.insetBy(dx: 0, dy: self.view.bounds.height * 0.08)
+            }
+            else
+            {
+                availableGameFrame = self.view.bounds
+            }
         }
-        
+
         self.controllerView.frame = controllerViewFrame
         
         let gameScreenDimensions = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
